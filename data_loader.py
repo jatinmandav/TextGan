@@ -28,7 +28,7 @@ class Preprocess:
         print('Vocabulary Size: {}'.format(self.vocab_size))
 
     def process(self, file, mode='train'):
-        df = pd.read_csv(file, sep='\t').head(500)
+        df = pd.read_csv(file, sep='\t')
         if mode == 'train':
             self.train_data = []
         else:
@@ -52,20 +52,23 @@ class Preprocess:
         paraphrase_batch = []
         for _ in range(batch_size):
             if mode == 'train':
-                sentence_pair = []
-                while len(sentence_pair) < 2:
-                    index = random.randint(0, len(self.train_data) - 1)
-                    sentence_pair = self.train_data[index]
+                #sentence_pair = []
+                #while len(sentence_pair) < 2:
+                index = random.randint(0, len(self.train_data) - 1)
+                sentence_pair = self.train_data[index]
             else:
-                sentence_pair = []
-                while len(sentence_pair) < 2:
-                    index = random.randint(0, len(self.test_data) - 1)
-                    sentence_pair = self.test_data[index]
+                #sentence_pair = []
+                #while len(sentence_pair) < 2:
+                index = random.randint(0, len(self.test_data) - 1)
+                sentence_pair = self.test_data[index]
 
             sentence = random.choice(sentence_pair)
             sentence_pair.remove(sentence)
             sentence = sentence.split(' ')
-            paraphrase = random.choice(sentence_pair).split(' ')
+            if sentence_pair != []:
+                paraphrase = random.choice(sentence_pair).split(' ')
+            else:
+                paraphrase = sentence[:]
 
             sent = []
             for i, word in enumerate(sentence):
