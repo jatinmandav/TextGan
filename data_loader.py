@@ -116,6 +116,14 @@ class Preprocess:
 
         return np.array(sentence_batch), np.array(paraphrase_batch)
 
+    def convert_to_sentence(self, word_index):
+        sentence = []
+
+        for index in word_index:
+            sentence.append(self.index_to_word[index])
+
+        return ' '.join(sentence)
+
     def load_embedding(self, fasttext_bin, embedding_size=256):
         self.embedding = FastText.load(fasttext_bin)
         self.vocab_size = len(self.embedding.wv.vocab) + 1
