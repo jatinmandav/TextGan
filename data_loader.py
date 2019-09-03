@@ -65,9 +65,9 @@ class Preprocess:
             sentence = random.choice(sentence_pair)
             sentence_pair.remove(sentence)
             sentence = sentence.split(' ')
-            if sentence_pair != []:
+            try:
                 paraphrase = random.choice(sentence_pair).split(' ')
-            else:
+            except IndexError:
                 paraphrase = sentence[:]
 
             sent = []
