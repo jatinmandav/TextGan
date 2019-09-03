@@ -120,7 +120,7 @@ class Preprocess:
         sentence = []
 
         for index in word_index:
-            sentence.append(self.index_to_word[index])
+            sentence.append(self.index_to_word[index+1])
 
         return ' '.join(sentence)
 
