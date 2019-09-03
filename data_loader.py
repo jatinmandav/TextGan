@@ -70,12 +70,21 @@ class Preprocess:
             sent = []
             for i, word in enumerate(sentence):
                 if i < self.max_seq_len:
-                    if word in list(self.word_to_index.keys()):
-                        sent.append(self.embedding[word])
+                    try:
+                        one_hot = np.zeros(self.vocab_size)
+                        one_hot[self.word_to_index[word]-1] = 1.
+                        sent.append(one_hot)
+                    except KeyError:
+                        pass
 
             padding = self.max_seq_len - len(sent)
             for i in range(padding):
-                sent.append(np.zeros(self.embedding_size))
+                try:
+                    one_hot = np.zeros(self.vocab_size)
+                    one_hot[self.word_to_index['_PAD_']-1] = 1.
+                    sent.append(one_hot)
+                except KeyError:
+                    pass
                 #sent.append(self.word_to_index['_PAD_']-1)
 
             sentence_batch.append(sent)
@@ -83,12 +92,21 @@ class Preprocess:
             sent = []
             for i, word in enumerate(paraphrase):
                 if i < self.max_seq_len:
-                    if word in list(self.word_to_index.keys()):
-                        sent.append(self.embedding[word])
+                    try:
+                        one_hot = np.zeros(self.vocab_size)
+                        one_hot[self.word_to_index[word]-1] = 1.
+                        sent.append(one_hot)
+                    except KeyError:
+                        pass
 
             padding = self.max_seq_len - len(sent)
             for i in range(padding):
-                sent.append(np.zeros(self.embedding_size))
+                try:
+                    one_hot = np.zeros(self.vocab_size)
+                    one_hot[self.word_to_index['_PAD_']-1] = 1.
+                    sent.append(one_hot)
+                except KeyError:
+                    pass
                 #sent.append(self.word_to_index['_PAD_'])
 
             paraphrase_batch.append(sent)
@@ -119,7 +137,6 @@ class Preprocess:
 if __name__ == '__main__':
     processor = Preprocess('raw_text.txt', max_seq_len=8)
     processor.process('test_data.tsv')
-    processor.load_embedding('embedding.fasttext')
 
     sent, para = processor.positive_batch(batch_size=20)
     print(sent.shape, para.shape)

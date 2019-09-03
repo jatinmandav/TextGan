@@ -1,6 +1,6 @@
 from keras.models import Model, Sequential
 from keras.layers import Dense, BatchNormalization, Activation, Input
-from keras.layers import LSTM, Bidirectional, Embedding, Concatenate, add
+from keras.layers import LSTM, Bidirectional, Embedding, concatenate, add
 from keras.layers.advanced_activations import LeakyReLU
 from keras.optimizers import Adam, RMSprop
 
@@ -19,29 +19,32 @@ class TextGAN:
         x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'), name='residual_block_{}_1'.format(i))(x1)
         x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'), name='residual_block_{}_2'.format(i))(x)
 
-        return Concatenate()([x1, x])
+        return concatenate([x1, x])
 
     def build_generator(self):
-        inp = Input(shape=(self.max_seq_len, self.embedding_size), name='sentence_input')
+        inp = Input(shape=(self.max_seq_len, self.vocabulary,), name='sentence_input')
+
+        embed = Dense(int(self.embedding_size), kernel_initializer='glorot_uniform', activation='sigmoid', name='embedding_layer')(inp)
+        x = concatenate([embed, embed], axis=-1)
 
         #if self.embedding_matrix != None:
         #    x = Embedding(self.vocabulary, self.embedding_size, mask_zero=False, weights=[self.embedding_matrix])(inp)
         #else:
         #    x = Embedding(self.vocabulary, self.embedding_size, mask_zero=False)(inp)
 
-        x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(inp)
+        x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(x)
         x = self.residual_block(x, 1)
         x = self.residual_block(x, 2)
 
         x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(x)
 
-        decode_seq = Dense(self.vocabulary, kernel_initializer='glorot_uniform', activation='softmax')(x)
+        x = Dense(self.vocabulary, kernel_initializer='glorot_uniform', activation='softmax')(x)
 
-        return Model(inputs=inp, outputs=[x, decode_seq])
+        return Model(inputs=inp, outputs=x)
 
     def build_discriminator(self):
-        actual_sentence_input = Input(shape=(self.max_seq_len, self.embedding_size), name='sentence_input')
-        paraphrase_input = Input(shape=(self.max_seq_len, self.embedding_size), name='paraphrase_input')
+        actual_sentence_input = Input(shape=(self.max_seq_len, self.vocabulary), name='sentence_input')
+        paraphrase_input = Input(shape=(self.max_seq_len, self.vocabulary), name='paraphrase_input')
 
         # if self.embedding_matrix != None:
         #     embedding_layer = Embedding(self.vocabulary, self.embedding_size, mask_zero=False, weights=[self.embedding_matrix])
@@ -51,13 +54,18 @@ class TextGAN:
         #actual_sentence = embedding_layer(actual_sentence_input)
         #paraphrase = embedding_layer(paraphrase_input)
 
-        x1 = Bidirectional(LSTM(self.embedding_size, return_sequences=True, kernel_initializer='glorot_uniform'))(actual_sentence_input)
-        x2 = Bidirectional(LSTM(self.embedding_size, return_sequences=True, kernel_initializer='glorot_uniform'))(paraphrase_input)
+        embedding_layer = Dense(self.embedding_size, activation='sigmoid', use_bias=False, name='embedding_layer')
 
-        x = Concatenate()([x1, x2])
+        x = concatenate([embedding_layer(actual_sentence_input), embedding_layer(paraphrase_input)], axis=-1)
 
-        x = Bidirectional(LSTM(self.embedding_size, return_sequences=True, kernel_initializer='glorot_uniform'))(x)
-        x = Bidirectional(LSTM(self.embedding_size, return_sequences=False, kernel_initializer='glorot_uniform'))(x)
+
+        x1 = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(actual_sentence_input)
+        x2 = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(paraphrase_input)
+
+        x = concatenate([x1, x2])
+
+        x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=True, kernel_initializer='glorot_uniform'))(x)
+        x = Bidirectional(LSTM(int(self.embedding_size/2), return_sequences=False, kernel_initializer='glorot_uniform'))(x)
 
         x = Dense(2, kernel_initializer='glorot_uniform', activation='softmax')(x)
 
@@ -73,10 +81,10 @@ class TextGAN:
 
         self.generator = self.build_generator()
         plot_model(self.generator, to_file='generator.png')
-        actual_sentence = Input(shape=(self.max_seq_len, self.embedding_size), name='sentence_input_generator')
-        output = self.generator(actual_sentence)
+        actual_sentence = Input(shape=(self.max_seq_len, self.vocabulary), name='sentence_input_generator')
+        paraphrase = self.generator(actual_sentence)
 
-        paraphrase = output[0]
+        #paraphrase = output[0]
 
         self.discriminator.trainable = False
 
