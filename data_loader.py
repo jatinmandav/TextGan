@@ -52,15 +52,15 @@ class Preprocess:
         paraphrase_batch = []
         for _ in range(batch_size):
             if mode == 'train':
-                #sentence_pair = []
-                #while len(sentence_pair) < 2:
-                index = random.randint(0, len(self.train_data) - 1)
-                sentence_pair = self.train_data[index]
+                sentence_pair = []
+                while sentence_pair == []:
+                    index = random.randint(0, len(self.train_data) - 1)
+                    sentence_pair = self.train_data[index]
             else:
-                #sentence_pair = []
-                #while len(sentence_pair) < 2:
-                index = random.randint(0, len(self.test_data) - 1)
-                sentence_pair = self.test_data[index]
+                sentence_pair = []
+                while sentence_pair == []:
+                    index = random.randint(0, len(self.test_data) - 1)
+                    sentence_pair = self.test_data[index]
 
             sentence = random.choice(sentence_pair)
             sentence_pair.remove(sentence)
